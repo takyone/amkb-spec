@@ -379,6 +379,10 @@ it neither knows nor cares about the weights or the component
 signals. A future Spikuit that replaces this composition with an
 LLM judge would still be conformant without any spec-level change.
 
+**See also.** `theory/retrieval.md` formalizes the three-level
+retrieval hierarchy (scoring / set-utility / policy) that makes
+this silence precise. R13 corresponds to theory/retrieval.md §1–§2.
+
 ## R12. `neighbors` depth=1 is MUST, depth>1 is SHOULD
 
 **Decision.** Implementations claiming L4a MUST support
@@ -407,6 +411,117 @@ be supported but MAY be refused with `E_INVALID`.
 3. Deep traversal belongs in client code that composes
    one-hop calls, if the implementation cannot offer it natively.
    The protocol level sets a floor, not a ceiling.
+
+## R14. Retrieval-side operations as a minimal action space
+
+**Decision.** The four retrieval-side operations — `get`,
+`find_by_attr`, `neighbors`, and `retrieve` — are chosen to be a
+minimally complete action space for multi-step retrieval policies.
+Quality-of-life primitives (`count`, `sample`, `path`, `explain`)
+are expressible via composition and are deferred to optional
+extensions. Policy-level actions (query reformulation, candidate
+critique, final synthesis) are agent-internal and outside the
+protocol's scope.
+
+**Reasons.**
+
+1. **Expressive completeness.** Any retrieval mechanism that touches
+   the store — from classical one-shot top-k to a Level III agentic
+   policy — can be assembled from these four primitives. A classical
+   RAG consumer issues a single `retrieve` and stops; a ReAct-style
+   consumer interleaves `retrieve`, `neighbors`, and `get`. The same
+   store backs both without architectural change.
+
+2. **Minimalism.** Each additional protocol operation raises the bar
+   for implementers. The four core ops cover the observation and
+   fetching needs of any reasonable policy; everything else is
+   composable or agent-internal.
+
+3. **Separation of store and policy.** By refusing to enshrine
+   reformulation, critique, or synthesis as protocol operations,
+   AMKB keeps the store surface independent of the policy layered
+   on top. A future agent framework can evolve without forcing
+   spec changes.
+
+**See also.** `theory/retrieval.md` §7.4 explains the same design
+in terms of Level III policies running over the AMKB substrate.
+
+## R15. Retrieval level is defined at an observation frame
+
+**Decision.** The retrieval-level hierarchy (Level I scoring / Level
+II set-utility / Level III policy) is a *relative* property, not an
+absolute one: a system's level is determined at a specified
+observation frame. AMKB adopts the protocol observation frame
+`O_AMKB = { intent, k, filter, store_snapshot }` and compares
+implementations at that frame.
+
+**Reasons.**
+
+1. **Agentic systems often look different at different frames.** A
+   GraphRAG implementation with a fixed two-stage plan is
+   mechanistically multi-step but behaviorally single-objective —
+   its output over `O_AMKB` can be characterized by one static
+   utility function. Fixing the frame avoids fruitless debate over
+   whether such a system is "really" Level II or Level III.
+
+2. **Conformance and benchmarking need a fixed frame.** Without one,
+   two correct implementations could appear incomparable.
+   `O_AMKB` is the natural frame for AMKB because it matches the
+   protocol's own observation surface: what the `retrieve` operation
+   takes as input and what it returns as output.
+
+3. **Implementation freedom is preserved.** Any internal mechanism is
+   permitted — random beam search, LLM critics, spreading activation
+   — as long as the protocol-frame input-output behavior conforms.
+   Randomness in tie-breaking does not raise the level; only
+   feedback observation outside the frame does.
+
+**Non-normative consequence.** Conformance tests examine the
+distribution of outputs under controlled inputs. Two implementations
+are protocol-indistinguishable iff they agree at `O_AMKB`, regardless
+of internal mechanism.
+
+**See also.** `theory/retrieval.md` §3 develops the frame-relative
+level hierarchy in detail.
+
+## R16. Merge is necessary, not merely convenient
+
+**Decision.** The `merge` operation is specified as a first-class
+lineage-preserving primitive (not delegated to "delete + recreate")
+because merging is *necessary* for retaining retrieval quality under
+continuous ingestion. This is a stronger claim than the earlier
+rationale, which treated merge as a curation convenience.
+
+**Reasons.**
+
+1. **Near-duplicate interference is a general retrieval hazard.** Any
+   ISF class — pointwise embedding, corpus-aware, graph-aware,
+   history-aware — degrades when concepts accumulate near-duplicates.
+   The degradation mode differs (pattern interference, IDF washout,
+   centrality splitting, context bloat) but the phenomenon is
+   universal.
+
+2. **For embedding-based C0 ISFs, the necessity is quantitative.**
+   The Modern Hopfield capacity bound (Ramsauer et al. 2020)
+   predicts that without merging, the minimum pattern separation
+   `Δ(X)` drives the retrieval error bound to O(1) at any
+   temperature. A greedy merge policy keeps `Δ(X)` bounded below
+   indefinitely. For C1–C3 ISFs, analogous qualitative arguments
+   hold; quantitative bounds are open.
+
+3. **Lineage preservation makes aggressive merging safe.** The
+   `derived_from` union on merge and the revertability of the
+   operation mean an agent can merge eagerly without information
+   loss. Merge is the minimal information-preserving primitive that
+   reverses near-duplicate degradation.
+
+**Consequence for implementers.** Curator agents should monitor
+near-duplicate pairs (by whatever similarity notion the ISF uses)
+and merge proactively. The merge threshold is a tunable trade-off
+between concept granularity and retrieval-quality retention.
+
+**See also.** `theory/retrieval.md` §8 develops the general thesis
+and the Hopfield instance in detail.
 
 ## Open Questions (for v0.2 and beyond)
 
@@ -477,5 +592,9 @@ Not yet decided.
   vs `filters` (R11), `neighbors` depth policy (R12), and
   relevance-as-implementation-defined (R13). Renames L4b from
   "Semantic" to "Intent" and makes `RetrievalHit.score`
-  OPTIONAL. Error model chapter and conformance suite still
+  OPTIONAL. Adds R14 (action-space completeness), R15 (observation
+  frame and protocol level), and R16 (merge necessity), with a new
+  non-normative `theory/retrieval.md` companion document giving
+  the theoretical background for these decisions. Error model
+  chapter and conformance suite still
   pending.

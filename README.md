@@ -41,6 +41,8 @@ amkb-spec/
 │   ├── 02-types.md         Field-level type and validation rules
 │   ├── 03-operations.md    Operation signatures and contracts
 │   └── 99-rationale.md     Design decisions and alternatives considered
+├── theory/                 Non-normative theoretical companion
+│   └── retrieval.md        Retrieval Theory primer (ISF, levels, frames, merge)
 ├── schema/                 (future) JSON Schema / msgspec types
 ├── conformance/            (future) Test suite for implementations
 └── examples/               (future) Worked examples
@@ -53,6 +55,12 @@ amkb-spec/
 3. [Types](spec/02-types.md) — normative field-level rules
 4. [Operations](spec/03-operations.md) — operation signatures and contracts
 5. [Rationale](spec/99-rationale.md) — why it's this way
+
+For theoretical background on the retrieval-related design decisions
+(the three-level hierarchy, observation frames, ISF classification,
+classical-vs-agentic accounting, and the Hopfield-grounded merge
+argument), see [theory/retrieval.md](theory/retrieval.md). This
+document is non-normative and may evolve independently of the spec.
 
 ## Specification Conventions
 
