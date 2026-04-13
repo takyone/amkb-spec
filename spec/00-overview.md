@@ -41,10 +41,13 @@ AMKB from traditional RAG:
    effort.** As the agent's underlying model improves, the knowledge
    base is better maintained — without additional human labor.
 
-2. **Attestation is separated from retrieval.** Concepts are indexed
-   and searched. Sources attest to concepts but are not themselves
-   retrieval targets. Traditional RAG collapses this distinction;
-   AMKB makes it structural.
+2. **Attestation is separated from retrieval.** Concept Nodes are
+   the target of intent queries; source Nodes attest to them but are
+   never returned as hits. The protocol treats "relevance" as
+   implementation-defined — embedding similarity, lexical scoring,
+   learned rankers, LLM judges, and graph walks are all equivalent
+   from the protocol's perspective. Traditional RAG collapses source
+   and concept into one; AMKB makes the distinction structural.
 
 3. **Every mutation is attributed and auditable.** All operations
    carry an `Actor` identifier and emit an event record. The
@@ -86,29 +89,29 @@ of whether it also exposes Spikuit-specific features.
 AMKB does **not** specify any of the following. Implementations are
 free to choose, extend, or omit them as they see fit.
 
-### Retrieval quality and ranking algorithms
+### Relevance estimation and ranking
 
-AMKB specifies the **shape** of retrieval (what goes in, what comes
-out, what cannot appear). It does **not** specify how results are
-ranked, what similarity metric is used, or how hybrid retrieval is
-performed. Two compliant implementations may return different results
-for the same query and both be correct.
+AMKB specifies the **shape** of intent query results (what goes in,
+what comes out, what cannot appear). It does **not** specify what
+"relevance" means, how it is estimated, what evidence is used, or
+how hits are ordered. Two compliant implementations MAY return
+different hits in different orders for the same intent query and
+both be correct.
 
-> Rationale: retrieval is an area of active research. Fixing the
-> algorithm in the spec would freeze implementations against progress.
+> Rationale: the protocol treats all relevance estimators — embedding
+> similarity, lexical scoring, graph walks, learned rankers, language-
+> model judgment, user-profile-aware retrieval — as equivalent. Freezing
+> any one of them in the spec would kill the diversity of implementations
+> the protocol is designed to enable.
 
 ### Embedding representations and vector indexes
 
-AMKB does not define an embedding format, a vector index format, or
-a similarity metric. Implementations are free to use any embedding
-model (or none), any index structure, and any metric. Node content
-is specified at the text level; its numerical representation is an
-internal concern.
-
-> Rationale: embedding models and vector-store backends evolve on
-> their own cadence. Keeping them out of the protocol preserves
-> portability of the conceptual layer while letting implementations
-> compete on retrieval quality.
+A particular case of the above: AMKB does not define an embedding
+format, a vector index format, or a similarity metric. Implementations
+are free to use any embedding model (or none), any index structure,
+and any metric — or to use no vectors at all. Node content is
+specified at the text level; its numerical representation, if any,
+is an internal concern.
 
 ### Scheduling and activation dynamics
 
@@ -169,8 +172,8 @@ orientation.
 | L1    | Core          | Node/Edge CRUD, events, history, revert           |
 | L2    | Lineage       | L1 + merge, lineage traversal, diff               |
 | L3    | Transactional | L2 + named transactions, atomic commit            |
-| L4a   | Structural    | L3 + `get_by_id`, `find_by_attr`, `neighbors`     |
-| L4b   | Semantic      | L4a + `retrieve(intent)` (shape only, not quality)|
+| L4a   | Structural    | L3 + `get`, `find_by_attr`, `neighbors`           |
+| L4b   | Intent        | L4a + `retrieve(intent)` (shape only, not ranking)|
 | L5    | Policy        | L4b + actor capabilities, authorization (optional)|
 
 An implementation claims a level by stating it and passing the

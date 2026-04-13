@@ -130,6 +130,12 @@ create a source Node, create concept Nodes, link them with
 indexes, or similarity metrics. Implementations MAY store embeddings
 internally, but not under canonical keys in `Node.attrs`.
 
+**Status.** This decision is now a corollary of the stronger R13
+("Relevance is not defined by the protocol"). R5 is preserved as a
+specific, concrete consequence — "no embedding format, no vector
+index format, no similarity metric" — while R13 states the general
+principle from which it follows.
+
 **Alternatives considered.**
 
 - **A: Standardize an embedding field.** Rejected: models and metrics
@@ -295,6 +301,84 @@ a minimal filter algebra (`Eq`, `In`, `Range`, `And`, `Or`, `Not`).
 4. The minimal filter algebra is small enough to specify (six
    forms) but expressive enough for typical retrieval use cases.
 
+## R13. Relevance is not defined by the protocol
+
+**Decision.** The protocol does not define what "relevance" means
+for an intent query. It requires only that `retrieve(intent, k)`
+return an ordered list of concept Nodes whose ordering is the
+implementation's own judgment about their relevance to `intent`.
+How that judgment is produced — embedding similarity, lexical
+scoring, graph structure, learned rankers, language-model judgment,
+user-profile signals, or any composition of these — is
+implementation-defined.
+
+**Alternatives considered.**
+
+- **A: Define relevance in terms of a canonical similarity metric
+  (e.g., cosine similarity over a standard embedding).** Rejected:
+  presupposes a particular estimation strategy, forces all
+  implementations through the same bottleneck, freezes the protocol
+  against a fast-moving research area.
+- **B: Define relevance as "similarity" (generic).** Rejected:
+  "similarity" is itself a narrower concept than relevance. A Node
+  may be relevant to a query without being textually or vectorially
+  similar to it — a counter-example, a prerequisite, a historical
+  precedent. Tying relevance to similarity would misframe retrieval.
+- **C: Define relevance as "the user finds it useful."** Rejected:
+  subjective; not testable; implementations cannot be held to a
+  contract about user satisfaction.
+- **D: Leave relevance entirely implementation-defined (chosen).**
+
+**Reasons for D.**
+
+1. **Relevance is a relation, not a property.** It depends on the
+   pair (intent, Node), not on the Node alone. Specifying it
+   universally would require specifying intent semantics — which
+   is beyond any reasonable protocol's scope.
+2. **Different agents need different notions of relevance.** A
+   tutor agent wants "concepts the learner should encounter next";
+   a QA agent wants "concepts that contain the answer"; a curator
+   agent wants "concepts that are duplicated or contradicted".
+   These are three different relevance functions, all legitimate,
+   all served by the same `retrieve` interface.
+3. **Estimation strategies are orthogonal to the protocol.** A
+   reference implementation might compose
+   `relevance ≈ w1·BM25 + w2·cosine + w3·graph_centrality`
+   today and `relevance ≈ LLM_judge(intent, candidates)` tomorrow.
+   The protocol does not know or care; both satisfy the same
+   contract.
+4. **The word "similarity" is a trap.** Similarity suggests
+   embedding-based proximity, which is only one of many valid
+   estimators. Using "relevance" keeps the abstraction at the
+   right level.
+5. **The protocol's job is the shape of the answer, not the
+   criterion that produced it.** Consumers need to know: "will I
+   get concept Nodes, in some order, with no sources, matching
+   my filters?" They do not need to know how the implementation
+   arrived at the order.
+
+**Consequences.**
+
+- `RetrievalHit.score` is OPTIONAL. Implementations that expose
+  only an order (no scalar) set `score = None`.
+- "Similarity metric" and "embedding representation" are not
+  protocol concepts; they are, at best, common implementation
+  choices for estimation.
+- R5 (embedding out of scope) is now a corollary of this rule.
+- The word "semantic query" is deprecated in favor of "intent
+  query" in normative text. "Semantic" presupposes a particular
+  estimation strategy; "intent" does not.
+
+**Non-normative consequence for Spikuit (reference impl).**
+
+Spikuit composes multiple signals into an intent-proxy score — for
+example, `w1·BM25 + w2·cosine + w3·graph_centrality + w4·FSRS_state`.
+This composition is a legitimate L4b (Intent) implementation. The
+protocol observes only that Spikuit returns ordered concept Nodes;
+it neither knows nor cares about the weights or the component
+signals. A future Spikuit that replaces this composition with an
+LLM judge would still be conformant without any spec-level change.
+
 ## R12. `neighbors` depth=1 is MUST, depth>1 is SHOULD
 
 **Decision.** Implementations claiming L4a MUST support
@@ -390,5 +474,8 @@ Not yet decided.
   signatures and contracts for Node/Edge lifecycle, query,
   transactions, history/revert, and events. Adopts
   transaction-owned operations (R10), distinct `attributes`
-  vs `filters` (R11), and `neighbors` depth policy (R12).
-  Error model chapter and conformance suite still pending.
+  vs `filters` (R11), `neighbors` depth policy (R12), and
+  relevance-as-implementation-defined (R13). Renames L4b from
+  "Semantic" to "Intent" and makes `RetrievalHit.score`
+  OPTIONAL. Error model chapter and conformance suite still
+  pending.

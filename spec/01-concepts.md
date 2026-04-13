@@ -176,7 +176,7 @@ carry pointers to their original content (URL, path, blob reference)
 and metadata about how they were acquired (timestamp, extractor
 version, content hash).
 
-**Source Nodes are not in the retrieval space.** Semantic queries
+**Source Nodes are not in the retrieval space.** Intent queries
 never return source Nodes. Source Nodes are reached only through
 structural traversal — typically from a concept Node along a
 `derived_from` or `attested_by` edge.
@@ -193,7 +193,7 @@ knowledge. A concept is a self-contained statement, definition, or
 explanation — the granularity at which the agent finds it useful to
 retrieve and reason.
 
-**Concept Nodes are the primary target of semantic retrieval.**
+**Concept Nodes are the primary target of intent retrieval.**
 Implementations MAY add additional retrieval-space kinds, but
 concept is always retrievable.
 
@@ -262,7 +262,7 @@ the merge can restore A and B.
 ## The Retrieval Space
 
 The **retrieval space** is the set of Nodes that can be returned by
-semantic query operations.
+intent query operations.
 
 The protocol defines the retrieval space by negative constraint:
 
@@ -276,29 +276,46 @@ prescribe what the retrieval space *is*; it prescribes what cannot
 be in it. The forbidden inclusion of sources is what distinguishes
 an AMKB from a traditional source-indexed RAG.
 
-Retrieval results are always ranked, but the ranking is
-implementation-defined. Two AMKB stores may return different results
-for the same semantic query and both be compliant. Conformance tests
+Retrieval results are always ordered, but the ordering criterion is
+implementation-defined. Two AMKB stores MAY return different results
+for the same intent query and both be compliant. Conformance tests
 check the *shape* of retrieval (what can and cannot appear), not the
-*quality* (how well ranked the results are).
+*quality* of ordering.
 
-## Structural vs Semantic Query
+## Structural vs Intent Query
 
-AMKB offers two query modalities:
+AMKB offers two query modalities that differ in their determinism
+guarantees.
 
-**Structural query** is deterministic. `get_by_id`, `find_by_attr`,
-and `neighbors` return exactly the Nodes or Edges that match their
+**Structural query** is deterministic. `get`, `find_by_attr`, and
+`neighbors` return exactly the Nodes or Edges that match their
 criteria. Two compliant implementations MUST return the same answers
-to the same structural query (modulo ordering, which MAY differ).
+to the same structural query (modulo result ordering, which MAY
+differ).
 
-**Semantic query** is not deterministic. `retrieve(intent, k)` returns
-`k` concept Nodes ranked by relevance to `intent`. Different
-implementations MAY return different Nodes with different rankings,
-all compliant.
+**Intent query** is non-deterministic. `retrieve(intent, k)` returns
+up to `k` concept Nodes ordered by the implementation's estimate of
+their **relevance** to the given `intent`. The protocol does not
+define what "relevance" means, how it is computed, or what evidence
+the implementation uses to estimate it. An implementation MAY use
+embedding similarity, lexical similarity, graph structure, learned
+rankers, language-model judgment, or any combination — the protocol
+treats all of these as equivalent "relevance estimators".
+
+Two compliant implementations MAY return different Nodes in different
+orders for the same intent query. Both are correct: the protocol
+specifies only the *shape* of the answer, not the *criterion* used
+to produce it.
+
+> The informal term "semantic query" is sometimes used for intent
+> query. This specification prefers "intent" because it does not
+> presuppose any particular estimation strategy (embedding-based,
+> lexical, or otherwise).
 
 Agent developers should use structural queries when they need exact
-answers (lineage traversal, audit, specific-ID lookup) and semantic
-queries when they need relevance-weighted answers to open questions.
+answers (lineage traversal, audit, specific-ID lookup) and intent
+queries when they want the implementation to surface concepts that
+are plausibly relevant to an open question.
 
 ## The Actor Model in Practice
 

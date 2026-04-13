@@ -563,6 +563,11 @@ where `Direction` is one of `"out"`, `"in"`, `"both"`.
 
 ### 3.4.4 `retrieve`
 
+An intent query. Given a free-text `intent`, the implementation
+returns concept Nodes it judges to be relevant to that intent, in
+its own relevance order. The protocol does not define relevance;
+see §2.7 for the intentional silence on how it is estimated.
+
 **Signature**
 
 ```
@@ -580,39 +585,59 @@ where `RetrievalHit` is:
 ```
 RetrievalHit:
     ref:   NodeRef
-    score: float    # implementation-defined, higher is more relevant
+    score: float | None    # implementation-defined; OPTIONAL
 ```
 
 and `Filter` is defined in 3.4.5.
 
 **Parameters**
 
-- `intent`: a free-text query. MUST NOT be empty.
+- `intent`: a free-text statement of what the caller wants. MUST
+  NOT be empty. Implementations interpret `intent` using their own
+  relevance estimator; the protocol places no requirement on the
+  interpretation.
 - `k`: maximum number of hits. MUST be positive.
 - `layer`: restrict hits to the given layer(s). If `None`, hits
   MUST come from the implementation's default retrieval-space
   layers (at minimum, `L_concept`).
 - `filters`: a `Filter` expression (see 3.4.5). If set, hits MUST
-  satisfy the filter.
+  satisfy the filter before relevance estimation is applied.
 
 **Semantics**
 
-- Hits MUST be ordered by `score` in descending order. Ties MAY
-  be broken in any deterministic way.
+- The returned list is **ordered** by the implementation's
+  relevance estimate, most relevant first. The *criterion* for
+  relevance is implementation-defined; see §2.7.
 - Hits MUST NOT include any Node with `kind="source"`, regardless
   of `layer` or `filters`.
 - Hits MUST NOT include retired Nodes.
-- The ranking strategy is implementation-defined. Two compliant
-  implementations MAY return different hits for the same `intent`.
+- Two compliant implementations MAY return different hits in
+  different orders for the same `intent`. Both are correct.
 - Conformance testing checks the **shape** of results (cardinality,
-  retrieval-space membership, ordering property) — not ranking
-  quality (see 06 — Conformance).
+  retrieval-space membership, ordering property, filter
+  compliance) — not the ranking quality, nor the criterion used
+  to produce the order. See 06 — Conformance.
+
+**Score field (OPTIONAL)**
+
+- `RetrievalHit.score` MAY be `None`. Implementations that do not
+  expose a numeric relevance estimate (e.g., rank-only, learned-
+  ranker, LLM-judge, categorical relevance) MUST set `score = None`
+  and rely on list order to carry the ordering.
+- If `score` is set, it MUST be a real number and MUST be consistent
+  with list order: for any two hits `a, b` at positions `i < j` in
+  the returned list, `a.score >= b.score` MUST hold.
+- The absolute magnitude and scale of `score` are
+  implementation-defined. Callers MUST NOT assume cross-implementation
+  comparability of scores, and SHOULD treat `score` as a
+  monotonically-ordered signal at most.
 
 **Postconditions**
 
 - Returns a list of at most `k` hits.
 - Each hit's `ref` resolves to a live Node whose `kind` is not
   `"source"`.
+- The list is ordered by the implementation's relevance estimate.
 
 **Errors**
 
@@ -622,16 +647,20 @@ and `Filter` is defined in 3.4.5.
   in a conformant implementation
 - `E_INTERNAL`
 
-**Conformance**: L4b (Semantic)
+**Conformance**: L4b (Intent)
 
 ---
 
 ### 3.4.5 `Filter` type
 
 `Filter` is a composable predicate over Node attributes, used by
-semantic retrieval (3.4.4). It is distinct from the `attributes`
+intent retrieval (3.4.4). It is distinct from the `attributes`
 parameter of `find_by_attr`: `attributes` is equality-only, while
 `Filter` supports richer predicates.
+
+A `Filter` narrows the candidate set *before* the implementation's
+relevance estimator ranks the survivors. Filters are deterministic;
+the subsequent ranking is not.
 
 **Minimal filter algebra**
 
@@ -660,8 +689,8 @@ Filter := Eq(key, value)
 
 **Requirements**
 
-- An implementation claiming L4b MUST support `Eq`, `In`, `And`,
-  `Or`.
+- An implementation claiming L4b (Intent) MUST support `Eq`,
+  `In`, `And`, `Or`.
 - An implementation claiming L4b SHOULD support `Range` and `Not`.
 - Implementations MAY add extension filter kinds with `ext:` prefix.
   Clients unfamiliar with an extension kind MUST reject filters
@@ -944,7 +973,7 @@ events(
 | `get`             | Store / Tx  | L1          |
 | `find_by_attr`    | Store / Tx  | L4a         |
 | `neighbors`       | Store / Tx  | L4a (d=1 MUST; d>1 SHOULD) |
-| `retrieve`        | Store / Tx  | L4b         |
+| `retrieve`        | Store / Tx  | L4b (Intent) |
 | `begin`           | Store       | L3          |
 | `commit`          | Transaction | L3          |
 | `abort`           | Transaction | L3          |

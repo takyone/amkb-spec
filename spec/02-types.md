@@ -160,7 +160,7 @@ Implementations MAY ignore reserved keys they do not use.
 ### 2.2.9 Retrieval-space membership
 
 - Nodes with `kind="source"` MUST NOT appear in the retrieval space
-  for any semantic query, regardless of query parameters.
+  for any intent query, regardless of query parameters.
 - Nodes with `kind="concept"` and `state="live"` MUST be eligible for
   the retrieval space.
 - Retired Nodes MUST NOT appear in the retrieval space.
@@ -417,18 +417,41 @@ prefix.
   (and, if possible, `before`) MUST include a `content_hash` field
   so that external indexes can detect staleness without re-fetching.
 
-## 2.7 Embedding and Vector Representations
+## 2.7 Relevance Estimation
 
-- This specification does NOT define an embedding representation,
-  vector index format, or similarity metric.
-- Implementations MUST NOT place embedding vectors in Node or Edge
-  `attrs` under canonical keys defined by this specification.
-- Implementations MAY expose embedding state via `ext:`-prefixed
+Intent queries (see 3.4.4) return concept Nodes ordered by the
+implementation's estimate of their **relevance** to the given intent.
+This specification is deliberately silent about how relevance is
+estimated.
+
+- This specification does NOT define what "relevance" means, how it
+  is computed, or what evidence an implementation uses to produce
+  its ordering.
+- This specification does NOT define an embedding representation, a
+  vector index format, a similarity metric, a lexical scoring
+  function, or any other particular estimation strategy. All such
+  strategies are equivalent from the protocol's perspective.
+- Implementations MAY use any combination of techniques — embedding
+  similarity, lexical matching, graph structure, learned rankers,
+  language-model judgment, user profile signals, or anything else —
+  to produce their ordering.
+- Implementations MUST NOT place relevance-estimation state
+  (embedding vectors, inverted indexes, learned weights) in Node
+  or Edge `attrs` under canonical keys defined by this specification.
+- Implementations MAY expose such state via `ext:`-prefixed
   attributes. Other implementations MUST ignore such attributes
   during import and export.
 - When a mutation changes `Node.content`, the resulting Event MUST
-  include a `content_hash` (see 2.6.5) so external vector indexes
-  can detect staleness.
+  include a `content_hash` (see 2.6.5) so that external retrieval
+  indexes can detect staleness without re-reading content.
+
+> **Non-normative note.** "Relevance" is a property of the pair
+> (intent, Node), not of the Node alone. The same Node MAY be highly
+> relevant to one intent and irrelevant to another. An implementation's
+> relevance estimator is effectively a function
+> `estimate(intent, Node) -> ordering_signal`. The protocol specifies
+> neither the signal type (scalar score, rank, class) nor the shape
+> of the function.
 
 ## 2.8 Validation Summary
 
