@@ -40,6 +40,7 @@ amkb-spec/
 │   ├── 01-concepts.md      Node, Edge, Actor, Transaction, Event, Layer
 │   ├── 02-types.md         Field-level type and validation rules
 │   ├── 03-operations.md    Operation signatures and contracts
+│   ├── 05-errors.md        Error model, categories, canonical codes
 │   └── 99-rationale.md     Design decisions and alternatives considered
 ├── theory/                 Non-normative theoretical companion
 │   └── retrieval.md        Retrieval Theory primer (ISF, levels, frames, merge)
@@ -54,7 +55,8 @@ amkb-spec/
 2. [Concepts](spec/01-concepts.md) — conceptual model
 3. [Types](spec/02-types.md) — normative field-level rules
 4. [Operations](spec/03-operations.md) — operation signatures and contracts
-5. [Rationale](spec/99-rationale.md) — why it's this way
+5. [Errors](spec/05-errors.md) — error model and canonical codes
+6. [Rationale](spec/99-rationale.md) — why it's this way
 
 For theoretical background on the retrieval-related design decisions
 (the three-level hierarchy, observation frames, ISF classification,

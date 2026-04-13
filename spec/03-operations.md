@@ -24,9 +24,7 @@ Each operation specification follows a fixed template:
 - **Conformance level** — the minimum level that MUST offer this operation
 
 Error codes referenced here (`E_INVALID_KIND`, etc.) are defined in
-the forthcoming [05 — Errors](05-errors.md) chapter. Until that
-chapter exists, treat them as opaque identifiers for the failure
-conditions they name.
+[05 — Errors](05-errors.md).
 
 ## 3.1 Conventions
 
