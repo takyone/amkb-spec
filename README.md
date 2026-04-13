@@ -39,6 +39,7 @@ amkb-spec/
 │   ├── 00-overview.md      What AMKB is, non-goals, audience
 │   ├── 01-concepts.md      Node, Edge, Actor, Transaction, Event, Layer
 │   ├── 02-types.md         Field-level type and validation rules
+│   ├── 03-operations.md    Operation signatures and contracts
 │   └── 99-rationale.md     Design decisions and alternatives considered
 ├── schema/                 (future) JSON Schema / msgspec types
 ├── conformance/            (future) Test suite for implementations
@@ -50,7 +51,8 @@ amkb-spec/
 1. [Overview](spec/00-overview.md) — context and scope
 2. [Concepts](spec/01-concepts.md) — conceptual model
 3. [Types](spec/02-types.md) — normative field-level rules
-4. [Rationale](spec/99-rationale.md) — why it's this way
+4. [Operations](spec/03-operations.md) — operation signatures and contracts
+5. [Rationale](spec/99-rationale.md) — why it's this way
 
 ## Specification Conventions
 

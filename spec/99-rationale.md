@@ -236,6 +236,94 @@ hold embeddings would force redundant storage and forbid
 implementations that separate graph from vectors. Content hashes
 are sufficient for invalidation.
 
+## R10. Transaction-owned operations, not store-owned
+
+**Decision.** Mutation operations (`create`, `rewrite`, `retire`,
+`merge`, `link`, `unlink`) live on the `Transaction` object, not on
+`Store`. To mutate, a caller MUST first open a transaction. `Store`
+MAY expose sugar methods that open an implicit single-op transaction,
+but the underlying contract is transaction-owned.
+
+**Alternatives considered.**
+
+- **A: Pass `tx` as an argument to every operation on `Store`.**
+  Rejected: verbose, easy to forget, unclear semantics when `tx` is
+  `None`.
+- **B: Rely on thread-local or task-local transaction context.**
+  Rejected: magic, bad for async code, hard to reason about.
+- **C: Operations live on `Transaction` (chosen).**
+
+**Reasons for C.**
+
+1. Every mutation is bound to a named atomic scope by construction.
+   No ambiguity about whether a mutation is "inside" or "outside"
+   a transaction.
+2. The SDK surface naturally guides agents to the correct pattern:
+   `async with store.begin(tag, actor) as tx: ...`.
+3. Single-op convenience (`Store.create(...)`) is available as
+   sugar, but the caller knows what it desugars to.
+4. Error handling is local to the transaction scope. An operation
+   error stays in the transaction; commit decides whether to take
+   it or reject the batch (see 2.5.4).
+
+## R11. `attributes` and `filters` are distinct concepts
+
+**Decision.** Structural query (`find_by_attr`) takes an
+`attributes` parameter restricted to equality matching. Semantic
+query (`retrieve`) takes a separate `filters` parameter supporting
+a minimal filter algebra (`Eq`, `In`, `Range`, `And`, `Or`, `Not`).
+
+**Alternatives considered.**
+
+- **A: One unified "query filter" type used by both operations.**
+  Rejected: overloads structural query with complexity it does not
+  need, blurs the line between deterministic and non-deterministic
+  query modes.
+- **B: Two distinct types (chosen).**
+
+**Reasons for B.**
+
+1. Structural query is deterministic; two implementations MUST
+   return the same set. Restricting to equality keeps determinism
+   easy to specify and test.
+2. Semantic query is non-deterministic; its filter is for refining
+   ranked results. Richer predicates are useful here but would be
+   a test-surface liability in structural query.
+3. Separating the concepts at the type level makes the user's
+   intent unambiguous: `attributes` for exact lookup, `filters`
+   for retrieval refinement.
+4. The minimal filter algebra is small enough to specify (six
+   forms) but expressive enough for typical retrieval use cases.
+
+## R12. `neighbors` depth=1 is MUST, depth>1 is SHOULD
+
+**Decision.** Implementations claiming L4a MUST support
+`neighbors(..., depth=1)`. Deeper traversals (`depth > 1`) SHOULD
+be supported but MAY be refused with `E_INVALID`.
+
+**Alternatives considered.**
+
+- **A: Mandate arbitrary depth at L4a.** Rejected: some backends
+  (naive SQLite implementations, for example) cannot do this
+  efficiently, and forcing it would push them to the fringe of
+  viability.
+- **B: Limit depth to 1 strictly.** Rejected: useful traversals
+  like "all concepts in two hops from this one" become impossible
+  at the protocol level, forcing impl-specific extensions.
+- **C: depth=1 MUST, depth>1 SHOULD (chosen).**
+
+**Reasons for C.**
+
+1. Most agent use cases are one-hop: "get the sources of this
+   concept", "get the concepts in this category". Mandating one
+   hop covers them.
+2. Implementations with strong graph backends (Neo4j, ArangoDB)
+   still advertise deeper traversal as SHOULD without forcing
+   weaker backends to comply.
+3. Deep traversal belongs in client code that composes
+   one-hop calls, if the implementation cannot offer it natively.
+   The protocol level sets a floor, not a ceiling.
+
 ## Open Questions (for v0.2 and beyond)
 
 The following questions are not yet decided and will shape future
@@ -243,10 +331,11 @@ versions of the spec.
 
 ### Q1. Query DSL
 
-How much of structural query should be standardized? Chapter 02
-implies `get_by_id`, `find_by_attr`, and `neighbors` at L4a, but
-the full argument shape is not yet fixed. Work in progress: draft
-a minimal Query type in Chapter 03 (not yet written).
+*Partially answered in Chapter 03.* Structural query is now specified
+via `find_by_attr` (equality-only) and `neighbors` (one-hop MUST,
+deeper SHOULD). Semantic query uses a minimal `Filter` algebra.
+Open: whether the filter algebra needs additional primitives
+(regex match, full-text match) for common use cases.
 
 ### Q2. Actor authentication and capability
 
@@ -297,3 +386,9 @@ Not yet decided.
   core kinds and relations, forbids sources from the retrieval
   space. Error model, conformance suite, and operations chapter
   remain to be written.
+- **v0.2.0 (in progress).** Adds Chapter 03 (Operations): full
+  signatures and contracts for Node/Edge lifecycle, query,
+  transactions, history/revert, and events. Adopts
+  transaction-owned operations (R10), distinct `attributes`
+  vs `filters` (R11), and `neighbors` depth policy (R12).
+  Error model chapter and conformance suite still pending.
