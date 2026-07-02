@@ -51,7 +51,7 @@ and no Node is created.
 **What.** Creating a Node with a reserved `kind`/`layer` pairing that
 the spec forbids raises `E_CROSS_LAYER_INVALID`.
 
-**Spec.** 02-types §2.4, 05-errors §5.4 (`E_CROSS_LAYER_INVALID`).
+**Spec.** 02-types §2.2.4, 05-errors §5.4 (`E_CROSS_LAYER_INVALID`).
 
 **Setup.** Open a transaction.
 
@@ -241,16 +241,17 @@ issue order.
 
 ### L1.tx.02 — Begin requires actor
 
-**What.** `begin()` without an `actor` raises
-`E_MISSING_REQUIRED_ATTR`.
+**What.** `begin()` without a valid `actor` raises `E_INVALID`.
 
-**Spec.** 03-operations §3.5.1, 05-errors §5.4.
+**Spec.** 03-operations §3.5.1, 05-errors §5.3.
 
 **Setup.** None.
 
 **Action.** `begin()` with no `actor`.
 
-**Expected.** `E_MISSING_REQUIRED_ATTR` is raised.
+**Expected.** `E_INVALID` is raised. (`E_MISSING_REQUIRED_ATTR` is the
+missing-actor code for `create` per 02-types §2.4.4; `begin()`'s own
+error contract in §3.5.1 names only `E_INVALID`.)
 
 ## history
 
