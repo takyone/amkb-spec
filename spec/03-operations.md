@@ -85,13 +85,19 @@ Notable idempotent cases:
 
 ### 3.1.5 Error raising contract
 
-- Operations raise errors by category (`NOT_FOUND`, `CONFLICT`,
-  `INVALID`, `CONSTRAINT`, `INTERNAL`, `PERMISSION`).
+- Operations raise errors belonging to one of the five categories
+  defined in [05 — Errors](05-errors.md) §5.3: `validation`,
+  `not_found`, `state`, `invariant`, `internal`. See 05-errors.md
+  §5.4 for the canonical code catalog within each category.
 - An error raised within an open transaction MUST NOT automatically
   abort the transaction (see 2.5.4).
 - An implementation MAY raise additional impl-defined errors with
   `ext:` prefix. Clients unfamiliar with an `ext:` code MUST treat
   it as the containing category's generic error.
+- Authorization and access control (a `PERMISSION`-style category)
+  are a non-goal of this specification (see 00-overview.md); no
+  canonical code or category is reserved for them. A future optional
+  Level 5 (Policy) MAY introduce one.
 
 ## 3.2 Node Lifecycle
 
@@ -855,8 +861,8 @@ diff(from_ts: Timestamp, to_ts: Timestamp) -> list[Event]
 
 **Postconditions**
 
-- Returns the list of Events committed strictly between `from_ts`
-  and `to_ts`, in commit order.
+- Returns the list of Events committed at or after `from_ts` and at
+  or before `to_ts` (inclusive of both endpoints), in commit order.
 - Applying the returned Events to a store that was in the state
   at `from_ts` MUST produce the state at `to_ts`.
 
