@@ -142,9 +142,9 @@ create(
 - `E_INVALID_LAYER` — `layer` empty or malformed
 - `E_EMPTY_CONTENT` — `content` empty for `kind="concept"`
 - `E_CROSS_LAYER_INVALID` — reserved kind with wrong layer
-- `E_MISSING_REQUIRED_ATTR` — reserved attributes missing
+- `E_MISSING_REQUIRED_ATTR` — reserved attributes missing, or actor
+  not set on the transaction (see 2.4.4)
 - `E_TRANSACTION_CLOSED` — transaction not open
-- `E_MISSING_REQUIRED_ATTR` — actor not set on transaction
 - `E_INTERNAL` — backend failure
 
 **Conformance**: L1 (Core)
@@ -614,7 +614,7 @@ and `Filter` is defined in 3.4.5.
 - Conformance testing checks the **shape** of results (cardinality,
   retrieval-space membership, ordering property, filter
   compliance) — not the ranking quality, nor the criterion used
-  to produce the order. See 06 — Conformance.
+  to produce the order. See [conformance/README.md](../conformance/README.md).
 
 **Score field (OPTIONAL)**
 
@@ -982,4 +982,5 @@ events(
 
 Implementations claim a conformance level by supporting all
 operations marked at or below that level, and by passing the
-corresponding conformance tests (see 06 — Conformance, forthcoming).
+corresponding conformance tests (see
+[conformance/README.md](../conformance/README.md)).
