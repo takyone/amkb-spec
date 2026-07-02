@@ -14,10 +14,11 @@ the normative spec section it verifies, and the expected outcome.
   checks, and their mapping to normative sections in `spec/`.
 - **Not here**: runnable test code. Executable contract tests belong
   in an SDK repository. The Python reference contract lives in
-  [amkb-sdk](https://github.com/takyone/amkb-sdk) as
-  `amkb_conformance.*`. Other languages (TypeScript, Rust, Go)
-  SHOULD maintain their own contract test suites, each
-  authoritatively derived from this matrix.
+  [amkb-sdk](https://github.com/takyone/amkb-sdk) as the
+  `amkb.conformance` subpackage of the `amkb` package. Other
+  languages (TypeScript, Rust, Go) SHOULD maintain their own
+  contract test suites, each authoritatively derived from this
+  matrix.
 
 Keeping the matrix documents-only preserves this repository's scope
 (specification, not implementation) and lets multiple SDKs coexist
@@ -90,9 +91,24 @@ Tests SHOULD be written at a level of abstraction that any
 implementation can execute, independent of SDK, wire format, or
 storage backend.
 
+## Known Coverage Gaps
+
+The matrix currently has zero tests for the following operations and
+error conditions. Writing them is future work, deferred until
+several open normative questions (see `spec/99-rationale.md`, Open
+Questions) are resolved and the semantics they'd need to assert
+against are stable:
+
+- `find_by_attr` (3.4.2)
+- `get` (3.4.1)
+- `diff` (3.6.2)
+- `unlink` (3.3.2)
+- The `link` layer-constraint errors: `E_CROSS_LAYER_INVALID`,
+  `E_RESERVED_REL_MISUSE`, `E_CONCEPT_TO_NONSOURCE_ATTEST`
+
 ## Status
 
 This matrix is in **draft** while the spec itself is in pre-draft.
 Test lists are incomplete: they enumerate the intended coverage
 but are not yet exhaustive. Contributions, especially from
-implementers, are welcome through the usual repository channels.
+implementers, are welcome — see [CONTRIBUTING.md](../CONTRIBUTING.md).
