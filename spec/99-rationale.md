@@ -301,6 +301,35 @@ a minimal filter algebra (`Eq`, `In`, `Range`, `And`, `Or`, `Not`).
 4. The minimal filter algebra is small enough to specify (six
    forms) but expressive enough for typical retrieval use cases.
 
+## R12. `neighbors` depth=1 is MUST, depth>1 is SHOULD
+
+**Decision.** Implementations claiming L4a MUST support
+`neighbors(..., depth=1)`. Deeper traversals (`depth > 1`) SHOULD
+be supported but MAY be refused with `E_INVALID`.
+
+**Alternatives considered.**
+
+- **A: Mandate arbitrary depth at L4a.** Rejected: some backends
+  (naive SQLite implementations, for example) cannot do this
+  efficiently, and forcing it would push them to the fringe of
+  viability.
+- **B: Limit depth to 1 strictly.** Rejected: useful traversals
+  like "all concepts in two hops from this one" become impossible
+  at the protocol level, forcing impl-specific extensions.
+- **C: depth=1 MUST, depth>1 SHOULD (chosen).**
+
+**Reasons for C.**
+
+1. Most agent use cases are one-hop: "get the sources of this
+   concept", "get the concepts in this category". Mandating one
+   hop covers them.
+2. Implementations with strong graph backends (Neo4j, ArangoDB)
+   still advertise deeper traversal as SHOULD without forcing
+   weaker backends to comply.
+3. Deep traversal belongs in client code that composes
+   one-hop calls, if the implementation cannot offer it natively.
+   The protocol level sets a floor, not a ceiling.
+
 ## R13. Relevance is not defined by the protocol
 
 **Decision.** The protocol does not define what "relevance" means
@@ -382,35 +411,6 @@ LLM judge would still be conformant without any spec-level change.
 **See also.** `theory/retrieval.md` formalizes the three-level
 retrieval hierarchy (scoring / set-utility / policy) that makes
 this silence precise. R13 corresponds to theory/retrieval.md §1–§2.
-
-## R12. `neighbors` depth=1 is MUST, depth>1 is SHOULD
-
-**Decision.** Implementations claiming L4a MUST support
-`neighbors(..., depth=1)`. Deeper traversals (`depth > 1`) SHOULD
-be supported but MAY be refused with `E_INVALID`.
-
-**Alternatives considered.**
-
-- **A: Mandate arbitrary depth at L4a.** Rejected: some backends
-  (naive SQLite implementations, for example) cannot do this
-  efficiently, and forcing it would push them to the fringe of
-  viability.
-- **B: Limit depth to 1 strictly.** Rejected: useful traversals
-  like "all concepts in two hops from this one" become impossible
-  at the protocol level, forcing impl-specific extensions.
-- **C: depth=1 MUST, depth>1 SHOULD (chosen).**
-
-**Reasons for C.**
-
-1. Most agent use cases are one-hop: "get the sources of this
-   concept", "get the concepts in this category". Mandating one
-   hop covers them.
-2. Implementations with strong graph backends (Neo4j, ArangoDB)
-   still advertise deeper traversal as SHOULD without forcing
-   weaker backends to comply.
-3. Deep traversal belongs in client code that composes
-   one-hop calls, if the implementation cannot offer it natively.
-   The protocol level sets a floor, not a ceiling.
 
 ## R14. Retrieval-side operations as a minimal action space
 
@@ -546,14 +546,16 @@ not affect L1-L4b implementations at all.
 
 ### Q3. Error model
 
-The full error model — codes, categories, retry hints, partial
-failure semantics — is mentioned in Chapter 02 but not yet written
-up as its own chapter. Planned for v0.2.
+**Resolved (v0.2.0).** The full error model — codes, categories, and
+retry hints — is specified in [05 — Errors](05-errors.md).
 
 ### Q4. Conformance test suite
 
-The test suite itself — runner shape, required test cases, level
-claims — is planned for a `conformance/` directory. Planned for v0.2.
+**Resolved (v0.2.0).** The conformance test suite lives in the
+[conformance/](../conformance/README.md) directory: a human-readable
+Markdown test matrix (not runnable code) covering levels L1 through
+L4b, with level-claiming and cherry-picking rules defined in
+conformance/README.md.
 
 ### Q5. Schema evolution
 
@@ -564,11 +566,11 @@ pragmatic choice for an early-stage spec and may be revisited.
 
 ### Q6. Category / Domain separation
 
-Chapter 01 introduces categories (as Nodes) and domains (as
-attributes). The exact relationship between them — can a category
-span multiple domains? must it be confined to one? — is not yet
-normatively specified. This will be settled when the conformance
-tests for L_category are written.
+Chapter 01 introduces categories (as Nodes); `domain` is defined as a
+reserved Node attribute in Chapter 02 §2.2.7. The exact relationship
+between them — can a category span multiple domains? must it be
+confined to one? — is not yet normatively specified. This will be
+settled when the conformance tests for L_category are written.
 
 ### Q7. Summary nodes
 
@@ -585,16 +587,17 @@ Not yet decided.
   core kinds and relations, forbids sources from the retrieval
   space. Error model, conformance suite, and operations chapter
   remain to be written.
-- **v0.2.0 (in progress).** Adds Chapter 03 (Operations): full
-  signatures and contracts for Node/Edge lifecycle, query,
-  transactions, history/revert, and events. Adopts
-  transaction-owned operations (R10), distinct `attributes`
-  vs `filters` (R11), `neighbors` depth policy (R12), and
-  relevance-as-implementation-defined (R13). Renames L4b from
-  "Semantic" to "Intent" and makes `RetrievalHit.score`
-  OPTIONAL. Adds R14 (action-space completeness), R15 (observation
-  frame and protocol level), and R16 (merge necessity), with a new
-  non-normative `theory/retrieval.md` companion document giving
-  the theoretical background for these decisions. Error model
-  chapter and conformance suite still
-  pending.
+- **v0.2.0.** Adds Chapter 03 (Operations): full signatures and
+  contracts for Node/Edge lifecycle, query, transactions,
+  history/revert, and events. Adopts transaction-owned operations
+  (R10), distinct `attributes` vs `filters` (R11), `neighbors` depth
+  policy (R12), and relevance-as-implementation-defined (R13).
+  Renames L4b from "Semantic" to "Intent" and makes
+  `RetrievalHit.score` OPTIONAL. Adds R14 (action-space
+  completeness), R15 (observation frame and protocol level), and
+  R16 (merge necessity), with a new non-normative
+  `theory/retrieval.md` companion document giving the theoretical
+  background for these decisions. Adds Chapter 05 (Errors): the
+  canonical error model, five categories, and 22 canonical codes.
+  Adds the `conformance/` directory: a human-readable Markdown test
+  matrix (L1 through L4b) for implementation conformance.
