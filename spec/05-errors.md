@@ -102,7 +102,7 @@ relation the implementation does not support.
 **`E_EMPTY_CONTENT`**
 *Category:* validation.
 A Node with `kind="concept"` was created or rewritten with empty
-`content`. Per 02-types §2.2.4, concept Nodes MUST have non-empty
+`content`. Per 02-types §2.2.5, concept Nodes MUST have non-empty
 content.
 
 **`E_CROSS_LAYER_INVALID`**
@@ -110,14 +110,16 @@ content.
 A reserved `kind`/`layer` pairing was violated. For example, a Node
 with `kind="source"` placed in `L_concept`, or an edge with
 `rel="derived_from"` pointing from a source Node to a concept Node.
-See 02-types §2.4 for the full table of reserved pairings.
+See 02-types §2.2.4 for the full table of reserved pairings.
 
 **`E_MISSING_REQUIRED_ATTR`**
 *Category:* validation.
-A reserved attribute required for the operation is missing. Examples:
-a `begin()` call without `actor` set; a source Node without
-`source_uri` (when the implementation requires it); a transaction
-committed while an invariant requires a particular attribute.
+A reserved attribute required for the operation is missing, or a
+mutation operation was invoked without an Actor (see 02-types
+§2.4.4). Examples: a mutation operation issued without an Actor
+identifier; a source Node without `content_ref` (when the
+implementation requires it); a transaction committed while an
+invariant requires a particular attribute.
 
 **`E_RESERVED_REL_MISUSE`**
 *Category:* validation.
@@ -127,14 +129,16 @@ different layers, or `generalizes` outside the category layer.
 
 **`E_CONCEPT_TO_NONSOURCE_ATTEST`**
 *Category:* validation.
-An `attested_by` or `derived_from` edge was created with a destination
-that is not a source Node. These relations are defined as
-concept → source only.
+An `attested_by`, `derived_from`, or `contradicted_by` edge was
+created with a destination that is not a source Node. Per 02-types
+§2.3.2, these relations are defined as concept → source only.
 
 **`E_SELF_LOOP`**
 *Category:* validation.
-An edge was created with identical `src` and `dst`. Self-loops are
-forbidden on all relations.
+An edge was created with identical `src` and `dst` on a **reserved**
+relation. Per 02-types §2.3.4, self-loops are forbidden for reserved
+relations; implementations MAY permit them for non-reserved
+relations.
 
 ### Not-found category
 
