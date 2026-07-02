@@ -15,7 +15,7 @@ This matrix is a **draft**. L3 inherits all L1 and L2 requirements.
 commit conflicting mutations MUST NOT both succeed. The second commit
 raises `E_CONCURRENT_MODIFICATION`.
 
-**Spec.** 05-errors §5.4, 03-operations §3.2.
+**Spec.** 05-errors §5.4, 03-operations §3.5.2.
 
 **Setup.** Two open transactions `T1`, `T2` both targeting the same
 Node `a`.
@@ -30,7 +30,7 @@ and is aborted.
 **What.** Two concurrent transactions that modify disjoint state MAY
 both commit successfully.
 
-**Spec.** 03-operations §3.2.
+**Spec.** 03-operations §3.5.2.
 
 **Setup.** Two transactions `T1`, `T2`, each targeting a different
 Node.
@@ -69,18 +69,25 @@ source Nodes to a live state.
 
 **Expected.** `m` is retired; `n1` and `n2` are live again.
 
-### L3.revert.03 — Revert conflict raises E_CONFLICT
+### L3.revert.03 — Revert conflict MAY raise E_CONFLICT
 
 **What.** Reverting a transaction whose effects have been diverged
-by a subsequent transaction raises `E_CONFLICT`.
+by a subsequent transaction MAY raise `E_CONFLICT`; 03-operations
+§3.6.3 makes this a MAY, not a MUST ("implementations MAY raise
+`E_CONFLICT`; they SHOULD attempt best-effort revert before
+raising"), so an implementation that instead performs a best-effort
+revert is also conformant.
 
-**Spec.** 05-errors §5.4.
+**Spec.** 03-operations §3.6.3, 05-errors §5.4.
 
 **Setup.** Commit `T1` creating `a`; commit `T2` rewriting `a`.
 
 **Action.** `revert(T1)`.
 
-**Expected.** `E_CONFLICT` is raised.
+**Expected.** Either `E_CONFLICT` is raised (transaction unaffected),
+or the implementation performs and documents a best-effort revert.
+An implementation MUST NOT silently produce an incomplete revert
+without raising `E_CONFLICT` (05-errors §5.4, `E_CONFLICT`).
 
 ### L3.revert.04 — Revert of unknown tag
 
@@ -98,6 +105,13 @@ by a subsequent transaction raises `E_CONFLICT`.
 ## constraints
 
 ### L3.constraint.01 — Commit-time invariant violation
+
+<!-- pending S-table -->
+<!-- The "Node a requires Node b via a reserved attribute" mechanism
+     referenced below does not exist anywhere in the spec (no
+     operation or type establishes an inter-Node "required by"
+     relationship via an attribute). Marked pending the Phase B
+     normative work rather than resolved here. -->
 
 **What.** A transaction that would leave the store in a state
 violating a protocol invariant (e.g., a required attribute missing

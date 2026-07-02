@@ -137,11 +137,16 @@ The following keys, when present, MUST have the specified meaning.
 
 | Key              | Applies to          | Type           | Meaning |
 |------------------|---------------------|----------------|---------|
-| `domain`         | any Node            | string         | Administrative partition (see Chapter 01). |
+| `domain`         | any Node            | string         | Administrative partition label (e.g., a subject area, project, or tenant). |
 | `content_ref`    | `kind="source"`     | string (URI)   | Pointer to external original content. |
 | `content_hash`   | `kind="source"`     | string         | Hash of the original content, algorithm-prefixed (e.g., `sha256:...`). |
 | `fetched_at`     | `kind="source"`     | Timestamp      | When the source was acquired. |
 | `extractor`      | `kind="source"`     | string         | Name/version of the extractor used at ingest. |
+
+`domain` is purely organizational: it carries no layer semantics and
+does not affect `kind`/`layer` validation (2.2.4), retrieval-space
+membership (2.2.9), or edge layer constraints (2.3.3). Implementations
+MAY use it to scope `find_by_attr` or `retrieve` queries.
 
 Implementations MUST NOT assign different meanings to these keys.
 Implementations MAY ignore reserved keys they do not use.
@@ -167,6 +172,18 @@ Implementations MAY ignore reserved keys they do not use.
 - Implementations MAY include other `kind` values (e.g., `category`)
   in the retrieval space at their discretion. This choice SHOULD be
   documented.
+
+### 2.2.10 Category cardinality
+
+- A concept Node MUST NOT be the source of more than one live
+  `belongs_to` edge (2.3.2) — that is, a concept belongs to at most
+  one category at a time.
+- Implementations MAY relax this constraint to allow a concept to
+  belong to multiple categories simultaneously (overlapping category
+  membership). This choice SHOULD be documented.
+- This constraint applies only to `belongs_to`. It does not limit the
+  number of `contains` edges a category Node may have, nor the
+  number of `generalizes` edges between categories.
 
 ## 2.3 Edge
 
@@ -470,8 +487,11 @@ any of the following invariants:
 6. A mutation operation is invoked without an Actor (2.4.4).
 7. An attempt is made to mutate a retired Node or Edge other than
    by reverting its retirement.
-8. A semantic query returns a Node with `kind="source"` (2.2.9).
+8. An intent query returns a Node with `kind="source"` (2.2.9).
 
 Violations of these invariants MUST raise errors from the
-appropriate category (`INVALID` or `CONSTRAINT`); the full error
-model is defined in a forthcoming chapter.
+appropriate category defined in [05 — Errors](05-errors.md) §5.3
+(most commonly `validation`; a few, such as mutating a retired
+entity or an intent-query invariant violation, fall under `state`
+or `invariant` respectively — see 05-errors.md §5.4 for the
+canonical code for each condition).

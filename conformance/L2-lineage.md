@@ -15,11 +15,11 @@ every L1 test in addition to every test below.
 **What.** Rewriting a live Node produces a new live Node whose
 lineage chain includes the rewritten predecessor.
 
-**Spec.** 03-operations §3.3 (rewrite), 01-concepts (lineage).
+**Spec.** 03-operations §3.2.2 (rewrite), 01-concepts (lineage).
 
 **Setup.** A live Node `a`.
 
-**Action.** `node_rewrite(a, new_content="...")`, `commit`.
+**Action.** `rewrite(a, new_content="...")`, `commit`.
 
 **Expected.** A new Node `a'` is live; `a` is retired; `lineage(a')`
 contains `a`.
@@ -32,7 +32,7 @@ contains `a`.
 
 **Setup.** A retired Node `a`.
 
-**Action.** `node_rewrite(a, ...)`.
+**Action.** `rewrite(a, ...)`.
 
 **Expected.** `E_NODE_ALREADY_RETIRED` is raised.
 
@@ -43,11 +43,11 @@ contains `a`.
 **What.** Merging `k` live Nodes of the same kind/layer produces one
 live Node and `k` retired Nodes, all connected by lineage.
 
-**Spec.** 03-operations §3.3 (merge), 04-events §4.7.1.
+**Spec.** 03-operations §3.2.4 (merge), 04-events §4.7.1.
 
 **Setup.** `k` live Nodes `n1..nk`, same `kind` and `layer`.
 
-**Action.** `node_merge([n1..nk], new_content="...")`, `commit`.
+**Action.** `merge([n1..nk], new_content="...")`, `commit`.
 
 **Expected.** A new live Node `m`; each `ni` is retired; `lineage(m)`
 contains all of `n1..nk`.
@@ -61,7 +61,7 @@ contains all of `n1..nk`.
 
 **Setup.** Two live Nodes with different `kind`.
 
-**Action.** `node_merge([n1, n2], ...)`.
+**Action.** `merge([n1, n2], ...)`.
 
 **Expected.** `E_MERGE_CONFLICT` is raised.
 
@@ -83,12 +83,19 @@ merged ref.
 
 ## lineage query
 
+<!-- pending S-2 -->
+<!-- `lineage(...)` is not among the 17 operations in 03-operations.md
+     as written; this test presumes it exists. Left unrenamed/unfixed
+     pending the Phase B decision on whether to add a `lineage`
+     operation to the spec. -->
+
 ### L2.lineage.01 — Transitive predecessor retrieval
 
 **What.** `lineage(n)` returns all transitive predecessors of `n`,
 across rewrites and merges.
 
-**Spec.** 03-operations §3.5.
+**Spec.** 03-operations §3.5 (pending S-2 — no `lineage` operation is
+currently defined in Chapter 03).
 
 **Setup.** A chain `a → a' → a''` via two rewrites.
 

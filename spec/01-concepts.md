@@ -162,7 +162,7 @@ protocol defines three canonical layers:
 | Layer       | Purpose                                                |
 |-------------|--------------------------------------------------------|
 | `L_source`  | Attestation layer. Sources of truth.                   |
-| `L_concept` | Retrieval layer. The primary target of semantic query. |
+| `L_concept` | Retrieval layer. The primary target of intent query.   |
 | `L_category`| Aggregate layer. Coarse-grained, navigable.            |
 
 An implementation MUST provide `L_concept`. The other layers are

@@ -29,7 +29,7 @@ serve four distinct purposes, each with different caller expectations:
    the log.
 
 The protocol treats the event log as the authoritative record of
-mutations. Store state MAY be rebuilt from events; events MAY NOT be
+mutations. Store state MAY be rebuilt from events; events cannot be
 rebuilt from store state alone (they carry intent — `actor`, `tag` —
 that state does not).
 

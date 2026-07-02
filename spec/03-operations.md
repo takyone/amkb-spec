@@ -85,13 +85,19 @@ Notable idempotent cases:
 
 ### 3.1.5 Error raising contract
 
-- Operations raise errors by category (`NOT_FOUND`, `CONFLICT`,
-  `INVALID`, `CONSTRAINT`, `INTERNAL`, `PERMISSION`).
+- Operations raise errors belonging to one of the five categories
+  defined in [05 — Errors](05-errors.md) §5.3: `validation`,
+  `not_found`, `state`, `invariant`, `internal`. See 05-errors.md
+  §5.4 for the canonical code catalog within each category.
 - An error raised within an open transaction MUST NOT automatically
   abort the transaction (see 2.5.4).
 - An implementation MAY raise additional impl-defined errors with
   `ext:` prefix. Clients unfamiliar with an `ext:` code MUST treat
   it as the containing category's generic error.
+- Authorization and access control (a `PERMISSION`-style category)
+  are a non-goal of this specification (see 00-overview.md); no
+  canonical code or category is reserved for them. A future optional
+  Level 5 (Policy) MAY introduce one.
 
 ## 3.2 Node Lifecycle
 
@@ -142,9 +148,9 @@ create(
 - `E_INVALID_LAYER` — `layer` empty or malformed
 - `E_EMPTY_CONTENT` — `content` empty for `kind="concept"`
 - `E_CROSS_LAYER_INVALID` — reserved kind with wrong layer
-- `E_MISSING_REQUIRED_ATTR` — reserved attributes missing
+- `E_MISSING_REQUIRED_ATTR` — reserved attributes missing, or actor
+  not set on the transaction (see 2.4.4)
 - `E_TRANSACTION_CLOSED` — transaction not open
-- `E_MISSING_REQUIRED_ATTR` — actor not set on transaction
 - `E_INTERNAL` — backend failure
 
 **Conformance**: L1 (Core)
@@ -614,7 +620,7 @@ and `Filter` is defined in 3.4.5.
 - Conformance testing checks the **shape** of results (cardinality,
   retrieval-space membership, ordering property, filter
   compliance) — not the ranking quality, nor the criterion used
-  to produce the order. See 06 — Conformance.
+  to produce the order. See [conformance/README.md](../conformance/README.md).
 
 **Score field (OPTIONAL)**
 
@@ -855,8 +861,8 @@ diff(from_ts: Timestamp, to_ts: Timestamp) -> list[Event]
 
 **Postconditions**
 
-- Returns the list of Events committed strictly between `from_ts`
-  and `to_ts`, in commit order.
+- Returns the list of Events committed at or after `from_ts` and at
+  or before `to_ts` (inclusive of both endpoints), in commit order.
 - Applying the returned Events to a store that was in the state
   at `from_ts` MUST produce the state at `to_ts`.
 
@@ -982,4 +988,5 @@ events(
 
 Implementations claim a conformance level by supporting all
 operations marked at or below that level, and by passing the
-corresponding conformance tests (see 06 — Conformance, forthcoming).
+corresponding conformance tests (see
+[conformance/README.md](../conformance/README.md)).
