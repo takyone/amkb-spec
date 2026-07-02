@@ -601,3 +601,27 @@ Not yet decided.
   canonical error model, five categories, and 22 canonical codes.
   Adds the `conformance/` directory: a human-readable Markdown test
   matrix (L1 through L4b) for implementation conformance.
+- **v0.2.1.** Editorial consistency pass; no semantic change to
+  conformant implementations. Fixes stale front matter (README
+  version/repo-tree/SDK-publication status, this chapter's v0.2.0
+  History entry and Q3/Q4/Q6), reorders R12/R13 into numeric order,
+  and adds CONTRIBUTING.md/CHANGELOG.md/notes/README.md. Fixes dead
+  cross-references (nonexistent "Chapter 06", wrong section numbers
+  in 05-errors.md and the conformance matrix) and terminology drift
+  ("semantic query" -> "intent query" outside historical mentions).
+  Resolves one-sided contradictions in favor of the named
+  authoritative side: 05-errors.md's error categories, `E_SELF_LOOP`
+  scope, and `diff`'s endpoint-inclusivity now match 02-types/
+  03-operations and the amkb-sdk DictStore/spikuit-agents reference
+  behavior consulted while fixing them. Adds 02-types §2.2.10
+  (category cardinality) and describes `domain` inline instead of
+  pointing at a nonexistent Chapter 01 section. Renames the
+  conformance matrix's `node_*`/`edge_*` calls and `limit=`/`filter=`
+  params to match 03-operations' actual API (`create`/`link`/
+  `retire`/`rewrite`/`merge`, `k=`/`filters=`), and marks tests that
+  lack normative backing (`<!-- pending S-2 -->`,
+  `<!-- pending S-table -->`, `[INFORMATIVE]`) instead of resolving
+  them, since resolving them requires the normative decisions
+  tracked as open questions in this chapter. Normative semantics are
+  unchanged; no MUST/SHOULD/MAY rule was added, removed, or
+  redefined.
