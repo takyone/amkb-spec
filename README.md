@@ -1,6 +1,6 @@
 # AMKB — Agent-Managed Knowledge Base Specification
 
-> **Status: Pre-draft (v0.1.0).** This specification is under active design.
+> **Status: Pre-draft (v0.2.0).** This specification is under active design.
 > Breaking changes happen without notice. Not ready for implementation
 > outside the reference implementation ([Spikuit](https://github.com/takyone/spikuit)).
 
@@ -35,6 +35,8 @@ consequences follow:
 amkb-spec/
 ├── LICENSE                 Apache-2.0
 ├── README.md               This file
+├── CONTRIBUTING.md         Contribution guidelines
+├── CHANGELOG.md            Version history
 ├── spec/                   Normative specification
 │   ├── 00-overview.md      What AMKB is, non-goals, audience
 │   ├── 01-concepts.md      Node, Edge, Actor, Transaction, Event, Layer
@@ -45,8 +47,9 @@ amkb-spec/
 │   └── 99-rationale.md     Design decisions and alternatives considered
 ├── theory/                 Non-normative theoretical companion
 │   └── retrieval.md        Retrieval Theory primer (ISF, levels, frames, merge)
+├── conformance/            Human-readable conformance test matrix (L1-L4b)
+├── notes/                  Pre-spec working notes (superseded by theory/)
 ├── schema/                 (future) JSON Schema / msgspec types
-├── conformance/            (future) Test suite for implementations
 └── examples/               (future) Worked examples
 ```
 
@@ -82,12 +85,13 @@ versions. Implementations should pin to an exact version until `1.0.0`.
 
 ## Status
 
-- **Current version**: 0.1.0 (pre-draft)
+- **Current version**: 0.2.0 (pre-draft)
 - **Reference implementation**: [Spikuit](https://github.com/takyone/spikuit)
-- **SDK**: [amkb-sdk](https://github.com/takyone/amkb-sdk) (not yet published)
+- **SDK**: [amkb-sdk](https://github.com/takyone/amkb-sdk) — published on PyPI
+  as [`amkb`](https://pypi.org/project/amkb/) (v0.0.1, pre-alpha)
 
 See [spec/99-rationale.md](spec/99-rationale.md) for the design decisions
-made at v0.1.0 and the open questions still under discussion.
+made through v0.2.0 and the open questions still under discussion.
 
 ## License
 
