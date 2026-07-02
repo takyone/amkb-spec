@@ -19,26 +19,28 @@ section is listed first.
 successfully created inside an open transaction and is visible after
 commit.
 
-**Spec.** 02-types §2.2, 03-operations §3.3.1.
+**Spec.** 02-types §2.2, 03-operations §3.2.1.
 
 **Setup.** Open a transaction with a valid `actor`.
 
-**Action.** Call `node_create(kind="concept", layer="L_concept",
+**Action.** Call `create(kind="concept", layer="L_concept",
 content="hello")`, then `commit`.
 
 **Expected.** The returned `NodeRef` resolves to a live Node whose
-`content` equals `"hello"` and whose `created_at` is the commit time.
+`content` equals `"hello"` and whose `created_at` is the time the
+`create` operation was issued (03-operations §3.2.1 Postconditions),
+not the transaction's commit time.
 
 ### L1.create.02 — Concept Node with empty content rejected
 
 **What.** Creating a concept Node with empty `content` raises
 `E_EMPTY_CONTENT`.
 
-**Spec.** 02-types §2.2.4, 05-errors §5.4 (`E_EMPTY_CONTENT`).
+**Spec.** 02-types §2.2.5, 05-errors §5.4 (`E_EMPTY_CONTENT`).
 
 **Setup.** Open a transaction.
 
-**Action.** Call `node_create(kind="concept", layer="L_concept",
+**Action.** Call `create(kind="concept", layer="L_concept",
 content="")`.
 
 **Expected.** `E_EMPTY_CONTENT` is raised; the transaction remains open
@@ -53,7 +55,7 @@ the spec forbids raises `E_CROSS_LAYER_INVALID`.
 
 **Setup.** Open a transaction.
 
-**Action.** Call `node_create(kind="source", layer="L_concept", ...)`.
+**Action.** Call `create(kind="source", layer="L_concept", ...)`.
 
 **Expected.** `E_CROSS_LAYER_INVALID` is raised.
 
@@ -62,12 +64,12 @@ the spec forbids raises `E_CROSS_LAYER_INVALID`.
 **What.** An Edge between two live Nodes of compatible kinds is
 created and visible after commit.
 
-**Spec.** 02-types §2.3, 03-operations §3.3.3.
+**Spec.** 02-types §2.3, 03-operations §3.3.1.
 
 **Setup.** Two live Nodes `a`, `b` of compatible kind/layer for the
 chosen `rel`.
 
-**Action.** `edge_create(src=a, dst=b, rel="relates_to")`, then
+**Action.** `link(src=a, dst=b, rel="relates_to")`, then
 `commit`.
 
 **Expected.** The Edge is retrievable and both endpoints expose it via
@@ -81,7 +83,7 @@ chosen `rel`.
 
 **Setup.** A live Node `a`.
 
-**Action.** `edge_create(src=a, dst=a, rel="relates_to")`.
+**Action.** `link(src=a, dst=a, rel="relates_to")`.
 
 **Expected.** `E_SELF_LOOP` is raised.
 
@@ -92,11 +94,11 @@ chosen `rel`.
 **What.** Retiring a live Node produces a tombstoned state visible to
 `get` and excluded from default `retrieve`.
 
-**Spec.** 03-operations §3.3.2.
+**Spec.** 03-operations §3.2.3.
 
 **Setup.** A live Node `a`.
 
-**Action.** `node_retire(a)`, `commit`.
+**Action.** `retire(a)`, `commit`.
 
 **Expected.** `get(a)` returns the tombstoned Node; `retrieve` with
 default filters does not return `a`.
@@ -106,11 +108,11 @@ default filters does not return `a`.
 **What.** Retiring an already-retired Node does not raise and does not
 emit an event.
 
-**Spec.** 03-operations §3.3.2, 04-events §4.2.3.
+**Spec.** 03-operations §3.2.3, 04-events §4.2.3.
 
 **Setup.** A retired Node `a`.
 
-**Action.** `node_retire(a)`, `commit`.
+**Action.** `retire(a)`, `commit`.
 
 **Expected.** Commit succeeds. The resulting ChangeSet contains no
 event for `a`.
@@ -131,13 +133,13 @@ event for `a`.
 
 ### L1.retrieve.02 — Limit respected
 
-**What.** `retrieve(limit=k)` returns at most `k` hits.
+**What.** `retrieve(k=k)` returns at most `k` hits.
 
 **Spec.** 03-operations §3.4.
 
 **Setup.** A store with more than `k` matching concept Nodes.
 
-**Action.** `retrieve(intent, limit=k)`.
+**Action.** `retrieve(intent, k=k)`.
 
 **Expected.** `len(results) <= k`.
 
@@ -233,7 +235,7 @@ issue order.
 
 **Setup.** A committed transaction `t`.
 
-**Action.** `node_create(...)` on `t`.
+**Action.** `create(...)` on `t`.
 
 **Expected.** `E_TRANSACTION_CLOSED` is raised.
 
@@ -242,7 +244,7 @@ issue order.
 **What.** `begin()` without an `actor` raises
 `E_MISSING_REQUIRED_ATTR`.
 
-**Spec.** 03-operations §3.2, 05-errors §5.4.
+**Spec.** 03-operations §3.5.1, 05-errors §5.4.
 
 **Setup.** None.
 
